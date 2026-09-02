@@ -1,0 +1,1366 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Garments Automation - Executive Web Dashboard</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-gradient: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+      --card-bg: rgba(30, 41, 59, 0.85);
+      --card-border: rgba(255, 255, 255, 0.08);
+      --accent-color: #38bdf8;
+      --accent-hover: #0284c7;
+      --success-color: #10b981;
+      --warning-color: #f59e0b;
+      --danger-color: #ef4444;
+      --text-main: #f8fafc;
+      --text-muted: #94a3b8;
+      --input-bg: #0f172a;
+      --input-border: #334155;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background: var(--bg-gradient);
+      color: var(--text-main);
+      min-height: 100vh;
+      padding: 2rem 1.5rem;
+    }
+
+    .container {
+      max-width: 1280px;
+      margin: 0 auto;
+    }
+
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 2rem;
+      padding-bottom: 1rem;
+      border-bottom: 1px solid var(--card-border);
+    }
+
+    .logo-group h1 {
+      font-size: 1.75rem;
+      font-weight: 700;
+      background: linear-gradient(90deg, #38bdf8, #818cf8);
+      background-clip: text;
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .logo-group p {
+      color: var(--text-muted);
+      font-size: 0.875rem;
+      margin-top: 0.25rem;
+    }
+
+    .week-selector {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      background: var(--card-bg);
+      padding: 0.5rem 1rem;
+      border-radius: 0.5rem;
+      border: 1px solid var(--card-border);
+    }
+
+    .week-selector label {
+      font-size: 0.875rem;
+      color: var(--text-muted);
+    }
+
+    .week-selector select {
+      background: var(--input-bg);
+      border: 1px solid var(--input-border);
+      color: var(--text-main);
+      padding: 0.35rem 0.5rem;
+      border-radius: 0.375rem;
+      font-weight: 600;
+    }
+
+    .nav-tabs {
+      display: flex;
+      gap: 0.5rem;
+      overflow-x: auto;
+      margin-bottom: 2rem;
+      border-bottom: 1px solid var(--card-border);
+      padding-bottom: 0.5rem;
+    }
+
+    .tab-btn {
+      background: transparent;
+      border: none;
+      color: var(--text-muted);
+      padding: 0.75rem 1.25rem;
+      border-radius: 0.5rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      white-space: nowrap;
+    }
+
+    .tab-btn:hover {
+      color: var(--text-main);
+      background: rgba(255, 255, 255, 0.05);
+    }
+
+    .tab-btn.active {
+      color: var(--accent-color);
+      background: rgba(56, 189, 248, 0.1);
+      font-weight: 600;
+      border-bottom: 2px solid var(--accent-color);
+    }
+
+    .tab-content {
+      display: none;
+    }
+
+    .tab-content.active {
+      display: block;
+      animation: fadeIn 0.3s ease;
+    }
+
+    .popup-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(2, 6, 23, 0.75);
+      backdrop-filter: blur(2px);
+      z-index: 200;
+      align-items: flex-start;
+      justify-content: center;
+      overflow-y: auto;
+      padding: 3rem 1rem;
+    }
+
+    .popup-overlay.visible {
+      display: flex;
+      animation: fadeIn 0.2s ease;
+    }
+
+    .popup-panel {
+      width: 100%;
+      max-width: 640px;
+    }
+
+    .popup-skip-btn {
+      margin-top: 1rem;
+      width: 100%;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(6px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .card {
+      background: var(--card-bg);
+      backdrop-filter: blur(12px);
+      border: 1px solid var(--card-border);
+      border-radius: 0.75rem;
+      padding: 1.5rem;
+      margin-bottom: 1.5rem;
+      box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3);
+    }
+
+    .card-title {
+      font-size: 1.25rem;
+      font-weight: 600;
+      margin-bottom: 1.25rem;
+      color: var(--text-main);
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .form-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 1.25rem;
+    }
+
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+
+    .form-group label {
+      font-size: 0.85rem;
+      font-weight: 500;
+      color: var(--text-muted);
+    }
+
+    .form-group input, .form-group select, .form-group textarea {
+      background: var(--input-bg);
+      border: 1px solid var(--input-border);
+      border-radius: 0.375rem;
+      color: var(--text-main);
+      padding: 0.65rem 0.85rem;
+      font-family: inherit;
+      font-size: 0.9rem;
+      transition: border-color 0.2s;
+    }
+
+    .form-group input:focus, .form-group select:focus, .form-group textarea:focus {
+      outline: none;
+      border-color: var(--accent-color);
+    }
+
+    .form-group input[readonly] {
+      background: rgba(15, 23, 42, 0.6);
+      color: var(--accent-color);
+      font-weight: 600;
+    }
+
+    .btn-submit {
+      margin-top: 1.5rem;
+      background: linear-gradient(135deg, var(--accent-color), var(--accent-hover));
+      color: #0f172a;
+      font-weight: 700;
+      border: none;
+      padding: 0.8rem 1.75rem;
+      border-radius: 0.5rem;
+      cursor: pointer;
+      font-size: 0.95rem;
+      transition: transform 0.15s, box-shadow 0.15s;
+    }
+
+    .btn-submit:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 15px rgba(56, 189, 248, 0.4);
+    }
+
+    .btn-secondary {
+      background: #334155;
+      color: var(--text-main);
+      font-weight: 600;
+      border: none;
+      padding: 0.6rem 1.2rem;
+      border-radius: 0.375rem;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+
+    .btn-secondary:hover {
+      background: #475569;
+    }
+
+    .mismatch-card {
+      background: rgba(239, 68, 68, 0.08);
+      border: 1px solid rgba(239, 68, 68, 0.25);
+      border-radius: 0.5rem;
+      padding: 1rem 1.25rem;
+      margin-bottom: 1rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .mismatch-headline {
+      font-size: 1rem;
+      font-weight: 600;
+      color: #fca5a5;
+    }
+
+    .mismatch-detail {
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      margin-top: 0.25rem;
+    }
+
+    .toast-container {
+      position: fixed;
+      bottom: 2rem;
+      right: 2rem;
+      z-index: 1000;
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+    }
+
+    .toast {
+      background: #1e293b;
+      color: #fff;
+      padding: 0.85rem 1.25rem;
+      border-radius: 0.5rem;
+      box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.5);
+      border-left: 4px solid var(--accent-color);
+      font-size: 0.9rem;
+      animation: slideIn 0.3s ease;
+    }
+
+    .toast.success { border-left-color: var(--success-color); }
+    .toast.error { border-left-color: var(--danger-color); }
+
+    @keyframes slideIn {
+      from { transform: translateX(100%); opacity: 0; }
+      to { transform: translateX(0); opacity: 1; }
+    }
+
+    .summary-metrics {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 1rem;
+      margin-top: 1.5rem;
+    }
+
+    .metric-box {
+      background: rgba(15, 23, 42, 0.6);
+      padding: 1rem;
+      border-radius: 0.5rem;
+      border: 1px solid var(--card-border);
+    }
+
+    .metric-box label {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      display: block;
+      margin-bottom: 0.35rem;
+    }
+
+    .metric-box .val {
+      font-size: 1.25rem;
+      font-weight: 700;
+      color: var(--accent-color);
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <div class="logo-group">
+        <h1>Garments Automation Portal</h1>
+        <p>Unified Entry Channel & Biometric Verification System</p>
+      </div>
+      <div class="week-selector">
+        <label for="currentWeekId">Active Week:</label>
+        <select id="currentWeekId" onchange="onWeekChange()">
+          <option value="1">Loading weeks...</option>
+        </select>
+      </div>
+    </header>
+
+    <!-- Navigation Tabs -->
+    <div class="nav-tabs">
+      <button class="tab-btn active" onclick="switchTab('production')">Production Entry</button>
+      <button class="tab-btn" onclick="switchTab('shift')">PT / Shift Entry</button>
+      <button class="tab-btn" onclick="switchTab('closing')">Weekly Closing</button>
+    </div>
+
+    <!-- 1. Production Entry -->
+    <div id="tab-production" class="tab-content active">
+      <div class="card">
+        <div class="card-title">Production Work Entry (Piece Rate)</div>
+        <form onsubmit="submitProduction(event)">
+          <div class="form-grid">
+            <div class="form-group">
+              <label>Work Date</label>
+              <input type="date" id="prod-date" required>
+            </div>
+            <div class="form-group">
+              <label>Employee Code</label>
+              <select id="prod-emp-code" required></select>
+            </div>
+            <div class="form-group">
+              <label>Style Number</label>
+              <select id="prod-style-no" required></select>
+            </div>
+            <div class="form-group">
+              <label>Operation Name</label>
+              <select id="prod-op-name" required></select>
+            </div>
+            <div class="form-group">
+              <label>Garment Type / Item</label>
+              <input type="text" id="prod-type" placeholder="e.g. SHIRT">
+            </div>
+            <div class="form-group">
+              <label>Color</label>
+              <input type="text" id="prod-color" placeholder="e.g. BLUE">
+            </div>
+            <div class="form-group">
+              <label>Total Qty (Sum of Sizes)</label>
+              <input type="text" id="prod-qty" readonly placeholder="0" oninput="calcProdAmount()">
+            </div>
+            <div class="form-group">
+              <label>Rate</label>
+              <input type="number" step="0.01" id="prod-rate" required oninput="calcProdAmount()">
+            </div>
+            <div class="form-group">
+              <label>Total Amount (Calculated)</label>
+              <input type="text" id="prod-amount" readonly placeholder="0.00">
+            </div>
+          </div>
+
+          <div class="card-title" style="margin-top:16px;">Size-wise Quantity</div>
+          <div class="form-grid" id="prod-size-grid">
+            <div class="form-group">
+              <label>N/B</label>
+              <input type="number" step="0.01" min="0" class="prod-size-input" data-size="N/B" placeholder="0" oninput="calcProdQtyFromSizes()">
+            </div>
+            <div class="form-group">
+              <label>0/3</label>
+              <input type="number" step="0.01" min="0" class="prod-size-input" data-size="0/3" placeholder="0" oninput="calcProdQtyFromSizes()">
+            </div>
+            <div class="form-group">
+              <label>3/6</label>
+              <input type="number" step="0.01" min="0" class="prod-size-input" data-size="3/6" placeholder="0" oninput="calcProdQtyFromSizes()">
+            </div>
+            <div class="form-group">
+              <label>6/9</label>
+              <input type="number" step="0.01" min="0" class="prod-size-input" data-size="6/9" placeholder="0" oninput="calcProdQtyFromSizes()">
+            </div>
+            <div class="form-group">
+              <label>9/12</label>
+              <input type="number" step="0.01" min="0" class="prod-size-input" data-size="9/12" placeholder="0" oninput="calcProdQtyFromSizes()">
+            </div>
+            <div class="form-group">
+              <label>12/18</label>
+              <input type="number" step="0.01" min="0" class="prod-size-input" data-size="12/18" placeholder="0" oninput="calcProdQtyFromSizes()">
+            </div>
+            <div class="form-group">
+              <label>18/24</label>
+              <input type="number" step="0.01" min="0" class="prod-size-input" data-size="18/24" placeholder="0" oninput="calcProdQtyFromSizes()">
+            </div>
+            <div class="form-group">
+              <label>2/3</label>
+              <input type="number" step="0.01" min="0" class="prod-size-input" data-size="2/3" placeholder="0" oninput="calcProdQtyFromSizes()">
+            </div>
+            <div class="form-group">
+              <label>3/4</label>
+              <input type="number" step="0.01" min="0" class="prod-size-input" data-size="3/4" placeholder="0" oninput="calcProdQtyFromSizes()">
+            </div>
+            <div class="form-group">
+              <label>4/5</label>
+              <input type="number" step="0.01" min="0" class="prod-size-input" data-size="4/5" placeholder="0" oninput="calcProdQtyFromSizes()">
+            </div>
+            <div class="form-group">
+              <label>5/6</label>
+              <input type="number" step="0.01" min="0" class="prod-size-input" data-size="5/6" placeholder="0" oninput="calcProdQtyFromSizes()">
+            </div>
+            <div class="form-group">
+              <label>6/7</label>
+              <input type="number" step="0.01" min="0" class="prod-size-input" data-size="6/7" placeholder="0" oninput="calcProdQtyFromSizes()">
+            </div>
+            <div class="form-group">
+              <label>7/8</label>
+              <input type="number" step="0.01" min="0" class="prod-size-input" data-size="7/8" placeholder="0" oninput="calcProdQtyFromSizes()">
+            </div>
+            <div class="form-group">
+              <label>0/6</label>
+              <input type="number" step="0.01" min="0" class="prod-size-input" data-size="0/6" placeholder="0" oninput="calcProdQtyFromSizes()">
+            </div>
+            <div class="form-group">
+              <label>6/12</label>
+              <input type="number" step="0.01" min="0" class="prod-size-input" data-size="6/12" placeholder="0" oninput="calcProdQtyFromSizes()">
+            </div>
+            <div class="form-group">
+              <label>2Y</label>
+              <input type="number" step="0.01" min="0" class="prod-size-input" data-size="2Y" placeholder="0" oninput="calcProdQtyFromSizes()">
+            </div>
+            <div class="form-group">
+              <label>3Y</label>
+              <input type="number" step="0.01" min="0" class="prod-size-input" data-size="3Y" placeholder="0" oninput="calcProdQtyFromSizes()">
+            </div>
+            <div class="form-group">
+              <label>S</label>
+              <input type="number" step="0.01" min="0" class="prod-size-input" data-size="S" placeholder="0" oninput="calcProdQtyFromSizes()">
+            </div>
+            <div class="form-group">
+              <label>M</label>
+              <input type="number" step="0.01" min="0" class="prod-size-input" data-size="M" placeholder="0" oninput="calcProdQtyFromSizes()">
+            </div>
+            <div class="form-group">
+              <label>L</label>
+              <input type="number" step="0.01" min="0" class="prod-size-input" data-size="L" placeholder="0" oninput="calcProdQtyFromSizes()">
+            </div>
+            <div class="form-group">
+              <label>2XL</label>
+              <input type="number" step="0.01" min="0" class="prod-size-input" data-size="2XL" placeholder="0" oninput="calcProdQtyFromSizes()">
+            </div>
+            <div class="form-group">
+              <label>P/M</label>
+              <input type="number" step="0.01" min="0" class="prod-size-input" data-size="P/M" placeholder="0" oninput="calcProdQtyFromSizes()">
+            </div>
+            <div class="form-group">
+              <label>BM</label>
+              <input type="number" step="0.01" min="0" class="prod-size-input" data-size="BM" placeholder="0" oninput="calcProdQtyFromSizes()">
+            </div>
+            <div class="form-group">
+              <label>RE</label>
+              <input type="number" step="0.01" min="0" class="prod-size-input" data-size="RE" placeholder="0" oninput="calcProdQtyFromSizes()">
+            </div>
+            <div class="form-group">
+              <label>SM</label>
+              <input type="number" step="0.01" min="0" class="prod-size-input" data-size="SM" placeholder="0" oninput="calcProdQtyFromSizes()">
+            </div>
+            <div class="form-group">
+              <label>OIL</label>
+              <input type="number" step="0.01" min="0" class="prod-size-input" data-size="OIL" placeholder="0" oninput="calcProdQtyFromSizes()">
+            </div>
+            <div class="form-group">
+              <label>AD</label>
+              <input type="number" step="0.01" min="0" class="prod-size-input" data-size="AD" placeholder="0" oninput="calcProdQtyFromSizes()">
+            </div>
+            <div class="form-group">
+              <label>ALL (use instead of individual sizes for a bulk/unsized run)</label>
+              <input type="number" step="0.01" min="0" class="prod-size-input" data-size="ALL" placeholder="0" oninput="calcProdQtyFromSizes()">
+            </div>
+          </div>
+          <button type="submit" class="btn-submit">Submit Production Record</button>
+        </form>
+      </div>
+    </div>
+
+    <!-- 2. Shift Entry -->
+    <div id="tab-shift" class="tab-content">
+      <div class="card">
+        <div class="card-title">Shift Work Entry (PT & Checking Shifts)</div>
+        <form onsubmit="submitShift(event)">
+          <div class="form-grid">
+            <div class="form-group">
+              <label>Work Date</label>
+              <input type="date" id="shift-date" required>
+            </div>
+            <div class="form-group">
+              <label>Employee Code</label>
+              <select id="shift-emp-code" required></select>
+            </div>
+            <div class="form-group">
+              <label>Operation Name</label>
+              <select id="shift-op-name" required></select>
+            </div>
+            <div class="form-group">
+              <label>Style Number (optional)</label>
+              <select id="shift-style-no"></select>
+            </div>
+            <div class="form-group">
+              <label>Garment Type (optional)</label>
+              <input type="text" id="shift-type" placeholder="e.g. SHIRT">
+            </div>
+            <div class="form-group">
+              <label>Color (optional)</label>
+              <input type="text" id="shift-color" placeholder="e.g. BLUE">
+            </div>
+            <div class="form-group">
+              <label>Item</label>
+              <input type="text" id="shift-item" placeholder="e.g. POWERTABLE">
+            </div>
+            <div class="form-group">
+              <label>Shifts Worked (0.5 increments)</label>
+              <input type="number" step="0.5" id="shift-shifts" required oninput="calcShiftSalary()">
+            </div>
+            <div class="form-group">
+              <label>Shift Rate</label>
+              <input type="number" step="0.01" id="shift-rate" required oninput="calcShiftSalary()">
+            </div>
+            <div class="form-group">
+              <label>Daily Salary (Calculated)</label>
+              <input type="text" id="shift-salary" readonly placeholder="0.00">
+            </div>
+          </div>
+          <button type="submit" class="btn-submit">Submit Shift Record</button>
+        </form>
+      </div>
+    </div>
+
+    <!-- 3. Outsource Work -->
+    <div id="tab-outsource" class="popup-overlay"><div class="popup-panel">
+      <div class="card">
+        <div class="card-title">Outsource Centre Payment Entry</div>
+        <form onsubmit="submitOutsource(event)">
+          <div class="form-grid">
+            <div class="form-group">
+              <label>Centre Name</label>
+              <input type="text" id="outs-centre" placeholder="e.g. APPAREL CREATIONS">
+            </div>
+            <div class="form-group">
+              <label>Style</label>
+              <input type="text" id="outs-style" required>
+            </div>
+            <div class="form-group">
+              <label>Item</label>
+              <input type="text" id="outs-item" required>
+            </div>
+            <div class="form-group">
+              <label>Quantity</label>
+              <input type="number" step="0.01" id="outs-qty" required oninput="calcOutsAmount()">
+            </div>
+            <div class="form-group">
+              <label>Rate</label>
+              <input type="number" step="0.01" id="outs-rate" required oninput="calcOutsAmount()">
+            </div>
+            <div class="form-group">
+              <label>Amount (Calculated)</label>
+              <input type="text" id="outs-amount" readonly placeholder="0.00">
+            </div>
+            <div class="form-group">
+              <label>Remarks</label>
+              <input type="text" id="outs-remarks">
+            </div>
+          </div>
+          <button type="submit" class="btn-submit">Submit Outsource Record</button>
+        </form>
+      </div>
+      <button class="btn-secondary popup-skip-btn" onclick="skipPopup('outsource')">Skip - Nothing to Report</button>
+    </div></div>
+
+    <!-- 4. Security Payments -->
+    <div id="tab-security" class="popup-overlay"><div class="popup-panel">
+      <div class="card">
+        <div class="card-title">Security Staff Payment Entry</div>
+        <form onsubmit="submitSecurity(event)">
+          <div class="form-grid">
+            <div class="form-group">
+              <label>Employee Code</label>
+              <select id="sec-emp-code" required></select>
+            </div>
+            <div class="form-group">
+              <label>Days Worked</label>
+              <input type="number" step="0.5" id="sec-days" required>
+            </div>
+            <div class="form-group">
+              <label>Amount</label>
+              <input type="number" step="0.01" id="sec-amount" required>
+            </div>
+            <div class="form-group">
+              <label>Remarks</label>
+              <input type="text" id="sec-remarks">
+            </div>
+          </div>
+          <button type="submit" class="btn-submit">Submit Security Payment</button>
+        </form>
+      </div>
+      <button class="btn-secondary popup-skip-btn" onclick="skipPopup('security')">Skip - Nothing to Report</button>
+    </div></div>
+
+    <!-- 5. General Expenses -->
+    <div id="tab-expenses" class="popup-overlay"><div class="popup-panel">
+      <div class="card">
+        <div class="card-title">General Factory Expense Entry</div>
+        <form onsubmit="submitExpenses(event)">
+          <div class="form-grid">
+            <div class="form-group">
+              <label>Expense Category / Name</label>
+              <input type="text" id="exp-category" placeholder="e.g. TEA & SNACKS" required>
+            </div>
+            <div class="form-group">
+              <label>Amount</label>
+              <input type="number" step="0.01" id="exp-amount" required>
+            </div>
+            <div class="form-group">
+              <label>Notes (Optional)</label>
+              <input type="text" id="exp-notes">
+            </div>
+          </div>
+          <button type="submit" class="btn-submit">Submit Expense</button>
+        </form>
+      </div>
+      <button class="btn-secondary popup-skip-btn" onclick="skipPopup('expenses')">Skip - Nothing to Report</button>
+    </div></div>
+
+    <!-- 6. Deductions -->
+    <div id="tab-deductions" class="popup-overlay"><div class="popup-panel">
+      <div class="card">
+        <div class="card-title">Employee Deduction Entry</div>
+        <form onsubmit="submitDeduction(event)">
+          <div class="form-grid">
+            <div class="form-group">
+              <label>Employee Code</label>
+              <select id="ded-emp-code" required></select>
+            </div>
+            <div class="form-group">
+              <label>Deduction Type</label>
+              <input type="text" id="ded-type" placeholder="e.g. ADVANCE" required>
+            </div>
+            <div class="form-group">
+              <label>Amount</label>
+              <input type="number" step="0.01" id="ded-amount" required>
+            </div>
+            <div class="form-group">
+              <label>Notes</label>
+              <input type="text" id="ded-notes">
+            </div>
+          </div>
+          <button type="submit" class="btn-submit">Submit Deduction</button>
+        </form>
+      </div>
+      <button class="btn-secondary popup-skip-btn" onclick="skipPopup('deductions')">Skip - Nothing to Report</button>
+    </div></div>
+
+    <!-- 7. Bonuses -->
+    <div id="tab-bonuses" class="popup-overlay"><div class="popup-panel">
+      <div class="card">
+        <div class="card-title">Employee Bonus Entry</div>
+        <form onsubmit="submitBonus(event)">
+          <div class="form-grid">
+            <div class="form-group">
+              <label>Employee Code</label>
+              <select id="bon-emp-code" required></select>
+            </div>
+            <div class="form-group">
+              <label>Bonus Type</label>
+              <input type="text" id="bon-type" placeholder="e.g. OVERTIME BONUS" required>
+            </div>
+            <div class="form-group">
+              <label>Amount</label>
+              <input type="number" step="0.01" id="bon-amount" required>
+            </div>
+            <div class="form-group">
+              <label>Notes</label>
+              <input type="text" id="bon-notes">
+            </div>
+          </div>
+          <button type="submit" class="btn-submit">Submit Bonus</button>
+        </form>
+      </div>
+      <button class="btn-secondary popup-skip-btn" onclick="skipPopup('bonuses')">Skip - Nothing to Report</button>
+    </div></div>
+
+    <!-- 8. Biometric Verification -->
+    <div id="tab-biometric" class="popup-overlay"><div class="popup-panel">
+      <div class="card">
+        <div class="card-title">Upload Biometric Export File</div>
+        <form onsubmit="submitBiometricUpload(event)">
+          <div class="form-grid">
+            <div class="form-group">
+              <label>Biometric File (.csv / .xlsx)</label>
+              <input type="file" id="bio-file" accept=".csv, .xlsx, .xls" required>
+            </div>
+          </div>
+          <button type="submit" class="btn-submit">Upload & Verify Attendance</button>
+        </form>
+      </div>
+
+      <div class="card">
+        <div class="card-title" style="justify-content: space-between;">
+          <span>Attendance Mismatch Review</span>
+          <button class="btn-secondary" onclick="overrideAllMismatches()">Override All Remaining</button>
+        </div>
+        <div id="mismatch-container">
+          <p style="color: var(--text-muted);">Click "Check Mismatches" to load pending biometric tap verification warnings.</p>
+        </div>
+        <button class="btn-secondary" style="margin-top: 1rem;" onclick="loadMismatches()">Check Mismatches</button>
+        <button class="btn-submit popup-skip-btn" onclick="continueFromBiometric()">Continue to Generate Weekly Closing</button>
+      </div>
+    </div></div>
+
+    <!-- 9. Weekly Closing Generator -->
+    <div id="tab-closing" class="tab-content">
+      <div class="card">
+        <div class="card-title">Generate Weekly Closing Excel Workbook</div>
+        <p style="color: var(--text-muted); margin-bottom: 1.5rem;">
+          Combines data from both Excel and Web inputs, executes salary engine computations, and generates the standard 5-sheet Weekly Closing workbook.
+        </p>
+        <button class="btn-submit" onclick="startWeeklyClosingFlow()">Generate Weekly Closing Workbook</button>
+        
+        <div id="closing-results" style="display: none; margin-top: 1.5rem;">
+          <div class="summary-metrics">
+            <div class="metric-box">
+              <label>Active Employees</label>
+              <div class="val" id="res-employees">0</div>
+            </div>
+            <div class="metric-box">
+              <label>Employee Salary Total</label>
+              <div class="val" id="res-salary">₹0.00</div>
+            </div>
+            <div class="metric-box">
+              <label>Contractor Commissions</label>
+              <div class="val" id="res-contractor">₹0.00</div>
+            </div>
+            <div class="metric-box">
+              <label>Factory Expenses</label>
+              <div class="val" id="res-expenses">₹0.00</div>
+            </div>
+            <div class="metric-box">
+              <label>Grand Total</label>
+              <div class="val" id="res-grand" style="color: var(--success-color);">₹0.00</div>
+            </div>
+          </div>
+          <div style="margin-top: 1.5rem;">
+            <a id="res-download-link" href="#" target="_blank" class="btn-submit" style="display: inline-block; text-decoration: none; text-align: center;">Download Weekly Closing Excel</a>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <div id="toast-container" class="toast-container"></div>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      loadMasterDropdowns();
+    });
+
+    async function loadMasterDropdowns() {
+      // 1. Weeks
+      try {
+        const weeksRes = await fetch('/weeks');
+        if (weeksRes.ok) {
+          const weeks = await weeksRes.json();
+          const weekSelect = document.getElementById('currentWeekId');
+          if (weeks.length > 0) {
+            weekSelect.innerHTML = weeks.map(w => 
+              `<option value="${w.id}">${w.label || ('Week ' + w.id)} (${w.week_start} → ${w.week_end})</option>`
+            ).join('');
+          } else {
+            weekSelect.innerHTML = '<option value="1">Week 1 (Default)</option>';
+          }
+        }
+      } catch (err) {
+        console.error('Error loading weeks:', err);
+      }
+
+      // 2. Employees
+      try {
+        const empRes = await fetch('/employees');
+        if (empRes.ok) {
+          const employees = await empRes.json();
+          const empSelects = ['prod-emp-code', 'shift-emp-code', 'sec-emp-code', 'ded-emp-code', 'bon-emp-code'];
+          const optionsHtml = employees.map(emp => {
+            const code = emp.employee_code || String(emp.id);
+            return `<option value="${code}">${code} - ${emp.name}</option>`;
+          }).join('');
+
+          empSelects.forEach(id => {
+            const el = document.getElementById(id);
+            if (el) el.innerHTML = optionsHtml || '<option value="">No employees registered</option>';
+          });
+        }
+      } catch (err) {
+        console.error('Error loading employees:', err);
+      }
+
+      // 3. Styles
+      try {
+        const stylesRes = await fetch('/styles');
+        if (stylesRes.ok) {
+          const styles = await stylesRes.json();
+          const optionsHtml = styles.map(s => 
+            `<option value="${s.style_no}">${s.style_no}${s.style_name ? ' (' + s.style_name + ')' : ''}</option>`
+          ).join('');
+
+          const prodEl = document.getElementById('prod-style-no');
+          if (prodEl) prodEl.innerHTML = optionsHtml || '<option value="">No styles registered</option>';
+
+          const shiftEl = document.getElementById('shift-style-no');
+          if (shiftEl) shiftEl.innerHTML = '<option value="">-- None --</option>' + optionsHtml;
+        }
+      } catch (err) {
+        console.error('Error loading styles:', err);
+      }
+
+      // 4. Operations
+      try {
+        const opRes = await fetch('/operations');
+        if (opRes.ok) {
+          const operations = await opRes.json();
+          const opSelects = ['prod-op-name', 'shift-op-name'];
+          const optionsHtml = operations.map(op => 
+            `<option value="${op.operation_name}">${op.operation_name}</option>`
+          ).join('');
+
+          opSelects.forEach(id => {
+            const el = document.getElementById(id);
+            if (el) el.innerHTML = optionsHtml || '<option value="">No operations registered</option>';
+          });
+        }
+      } catch (err) {
+        console.error('Error loading operations:', err);
+      }
+    }
+
+    function getWeekId() {
+      const val = document.getElementById('currentWeekId').value;
+      return parseInt(val) || 1;
+    }
+
+    function onWeekChange() {
+      showToast('Active Week updated to ID #' + getWeekId(), 'success');
+      loadMismatches();
+    }
+
+    function switchTab(tabName) {
+      document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+      document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+      
+      event.target.classList.add('active');
+      document.getElementById('tab-' + tabName).classList.add('active');
+    }
+
+    function showToast(msg, type = 'info') {
+      const container = document.getElementById('toast-container');
+      const toast = document.createElement('div');
+      toast.className = `toast ${type}`;
+      toast.innerText = msg;
+      container.appendChild(toast);
+      setTimeout(() => toast.remove(), 4000);
+    }
+
+    // Calculations
+    function calcProdQtyFromSizes() {
+      const inputs = document.querySelectorAll('.prod-size-input');
+      let total = 0;
+      inputs.forEach(inp => {
+        total += parseFloat(inp.value) || 0;
+      });
+      document.getElementById('prod-qty').value = total;
+      calcProdAmount();
+    }
+
+    function calcProdAmount() {
+      const qty = parseFloat(document.getElementById('prod-qty').value) || 0;
+      const rate = parseFloat(document.getElementById('prod-rate').value) || 0;
+      document.getElementById('prod-amount').value = (qty * rate).toFixed(2);
+    }
+
+    function calcShiftSalary() {
+      const shifts = parseFloat(document.getElementById('shift-shifts').value) || 0;
+      const rate = parseFloat(document.getElementById('shift-rate').value) || 0;
+      document.getElementById('shift-salary').value = (shifts * rate).toFixed(2);
+    }
+
+    function calcOutsAmount() {
+      const qty = parseFloat(document.getElementById('outs-qty').value) || 0;
+      const rate = parseFloat(document.getElementById('outs-rate').value) || 0;
+      document.getElementById('outs-amount').value = (qty * rate).toFixed(2);
+    }
+
+    // Submit handlers
+    async function submitProduction(e) {
+      e.preventDefault();
+      const weekId = getWeekId();
+
+      const sizes = {};
+      document.querySelectorAll('.prod-size-input').forEach(inp => {
+        const val = parseFloat(inp.value) || 0;
+        if (val > 0) {
+          sizes[inp.dataset.size] = val;
+        }
+      });
+
+      const payload = {
+        work_date: document.getElementById('prod-date').value,
+        employee_code: document.getElementById('prod-emp-code').value,
+        style_no: document.getElementById('prod-style-no').value,
+        operation_name: document.getElementById('prod-op-name').value,
+        type: document.getElementById('prod-type').value,
+        color: document.getElementById('prod-color').value,
+        total_qty: parseFloat(document.getElementById('prod-qty').value),
+        rate: parseFloat(document.getElementById('prod-rate').value),
+        sizes: sizes
+      };
+
+      if (Object.keys(sizes).length === 0) {
+        showToast('Enter at least one size quantity (or use ALL for a bulk/unsized run).', 'error');
+        return;
+      }
+
+      try {
+        const res = await fetch(`/weeks/${weekId}/production`, {
+          method: 'POST',
+          headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify(payload)
+        });
+        const data = await res.json();
+        if (res.ok) {
+          showToast('Production record added successfully!', 'success');
+          e.target.reset();
+          document.getElementById('prod-qty').value = '';
+          document.getElementById('prod-amount').value = '';
+        } else {
+          showToast('Error: ' + (data.detail || 'Failed to submit'), 'error');
+        }
+      } catch (err) {
+        showToast('Submission error: ' + err.message, 'error');
+      }
+    }
+
+    async function submitShift(e) {
+      e.preventDefault();
+      const weekId = getWeekId();
+      const styleNoRaw = document.getElementById('shift-style-no').value;
+      const payload = {
+        work_date: document.getElementById('shift-date').value,
+        employee_code: document.getElementById('shift-emp-code').value,
+        operation_name: document.getElementById('shift-op-name').value,
+        style_no: styleNoRaw || null,
+        type: document.getElementById('shift-type').value,
+        color: document.getElementById('shift-color').value,
+        item: document.getElementById('shift-item').value,
+        shifts: parseFloat(document.getElementById('shift-shifts').value),
+        shift_rate: parseFloat(document.getElementById('shift-rate').value)
+      };
+
+      try {
+        const res = await fetch(`/weeks/${weekId}/shift`, {
+          method: 'POST',
+          headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify(payload)
+        });
+        const data = await res.json();
+        if (res.ok) {
+          showToast('Shift record added successfully!', 'success');
+          e.target.reset();
+        } else {
+          showToast('Error: ' + (data.detail || 'Failed to submit'), 'error');
+        }
+      } catch (err) {
+        showToast('Submission error: ' + err.message, 'error');
+      }
+    }
+
+    async function submitOutsource(e) {
+      e.preventDefault();
+      const weekId = getWeekId();
+      const payload = {
+        centre_name: document.getElementById('outs-centre').value,
+        style: document.getElementById('outs-style').value,
+        item: document.getElementById('outs-item').value,
+        qty: parseFloat(document.getElementById('outs-qty').value),
+        rate: parseFloat(document.getElementById('outs-rate').value),
+        remarks: document.getElementById('outs-remarks').value
+      };
+
+      try {
+        const res = await fetch(`/weeks/${weekId}/outsource`, {
+          method: 'POST',
+          headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify(payload)
+        });
+        const data = await res.json();
+        if (res.ok) {
+          showToast('Outsource payment record added!', 'success');
+          e.target.reset();
+          hidePopup('outsource');
+          advancePopupQueue();
+        } else {
+          showToast('Error: ' + (data.detail || 'Failed to submit'), 'error');
+        }
+      } catch (err) {
+        showToast('Submission error: ' + err.message, 'error');
+      }
+    }
+
+    async function submitSecurity(e) {
+      e.preventDefault();
+      const weekId = getWeekId();
+      const payload = {
+        employee_code: document.getElementById('sec-emp-code').value,
+        days: parseFloat(document.getElementById('sec-days').value),
+        amount: parseFloat(document.getElementById('sec-amount').value),
+        remarks: document.getElementById('sec-remarks').value
+      };
+
+      try {
+        const res = await fetch(`/weeks/${weekId}/security`, {
+          method: 'POST',
+          headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify(payload)
+        });
+        const data = await res.json();
+        if (res.ok) {
+          showToast('Security payment recorded!', 'success');
+          e.target.reset();
+          hidePopup('security');
+          advancePopupQueue();
+        } else {
+          showToast('Error: ' + (data.detail || 'Failed to submit'), 'error');
+        }
+      } catch (err) {
+        showToast('Submission error: ' + err.message, 'error');
+      }
+    }
+
+    async function submitExpenses(e) {
+      e.preventDefault();
+      const weekId = getWeekId();
+      const payload = {
+        category: document.getElementById('exp-category').value,
+        amount: parseFloat(document.getElementById('exp-amount').value),
+        notes: document.getElementById('exp-notes').value
+      };
+
+      try {
+        const res = await fetch(`/weeks/${weekId}/expenses`, {
+          method: 'POST',
+          headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify(payload)
+        });
+        const data = await res.json();
+        if (res.ok) {
+          showToast('Expense recorded!', 'success');
+          e.target.reset();
+          hidePopup('expenses');
+          advancePopupQueue();
+        } else {
+          showToast('Error: ' + (data.detail || 'Failed to submit'), 'error');
+        }
+      } catch (err) {
+        showToast('Submission error: ' + err.message, 'error');
+      }
+    }
+
+    async function submitDeduction(e) {
+      e.preventDefault();
+      const weekId = getWeekId();
+      const payload = {
+        employee_code: document.getElementById('ded-emp-code').value,
+        deduction_type: document.getElementById('ded-type').value,
+        amount: parseFloat(document.getElementById('ded-amount').value),
+        notes: document.getElementById('ded-notes').value
+      };
+
+      try {
+        const res = await fetch(`/weeks/${weekId}/deductions`, {
+          method: 'POST',
+          headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify(payload)
+        });
+        const data = await res.json();
+        if (res.ok) {
+          showToast('Deduction recorded!', 'success');
+          e.target.reset();
+          hidePopup('deductions');
+          advancePopupQueue();
+        } else {
+          showToast('Error: ' + (data.detail || 'Failed to submit'), 'error');
+        }
+      } catch (err) {
+        showToast('Submission error: ' + err.message, 'error');
+      }
+    }
+
+    async function submitBonus(e) {
+      e.preventDefault();
+      const weekId = getWeekId();
+      const payload = {
+        employee_code: document.getElementById('bon-emp-code').value,
+        bonus_type: document.getElementById('bon-type').value,
+        amount: parseFloat(document.getElementById('bon-amount').value),
+        notes: document.getElementById('bon-notes').value
+      };
+
+      try {
+        const res = await fetch(`/weeks/${weekId}/bonuses`, {
+          method: 'POST',
+          headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify(payload)
+        });
+        const data = await res.json();
+        if (res.ok) {
+          showToast('Bonus recorded!', 'success');
+          e.target.reset();
+          hidePopup('bonuses');
+          advancePopupQueue();
+        } else {
+          showToast('Error: ' + (data.detail || 'Failed to submit'), 'error');
+        }
+      } catch (err) {
+        showToast('Submission error: ' + err.message, 'error');
+      }
+    }
+
+    async function submitBiometricUpload(e) {
+      e.preventDefault();
+      const weekId = getWeekId();
+      const fileInput = document.getElementById('bio-file');
+      if (!fileInput.files.length) return;
+
+      const formData = new FormData();
+      formData.append('file', fileInput.files[0]);
+
+      try {
+        const res = await fetch(`/weeks/${weekId}/biometric-import`, {
+          method: 'POST',
+          body: formData
+        });
+        const data = await res.json();
+        if (res.ok) {
+          showToast(`Biometric data imported! (${data.records_inserted} rows)`, 'success');
+          loadMismatches();
+        } else {
+          showToast('Import Error: ' + (data.detail || 'Failed'), 'error');
+        }
+      } catch (err) {
+        showToast('Upload error: ' + err.message, 'error');
+      }
+    }
+
+    async function loadMismatches() {
+      const weekId = getWeekId();
+      const container = document.getElementById('mismatch-container');
+      try {
+        const res = await fetch(`/weeks/${weekId}/attendance-mismatches`);
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.detail || 'Failed to load');
+
+        if (data.length === 0) {
+          container.innerHTML = '<p style="color: var(--success-color); font-weight: 500;">✓ No pending biometric attendance mismatches found for this week.</p>';
+          return;
+        }
+
+        let html = '';
+        data.forEach(item => {
+          html += `
+            <div class="mismatch-card">
+              <div>
+                <div class="mismatch-headline">${item.headline}</div>
+                <div class="mismatch-detail">Entered: ${item.entered_shift_value} shift | Biometric: ${item.biometric_shift_value} shift</div>
+              </div>
+              <button class="btn-secondary" onclick="overrideSingle(${item.employee_id}, '${item.work_date}', ${item.biometric_shift_value}, ${item.entered_shift_value})">Override Warning</button>
+            </div>
+          `;
+        });
+        container.innerHTML = html;
+      } catch (err) {
+        container.innerHTML = `<p style="color: var(--danger-color);">Error loading mismatches: ${err.message}</p>`;
+      }
+    }
+
+    async function overrideSingle(empId, workDate, bioVal, enteredVal) {
+      const weekId = getWeekId();
+      try {
+        const res = await fetch(`/weeks/${weekId}/attendance-mismatches/override`, {
+          method: 'POST',
+          headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify({
+            employee_id: empId,
+            work_date: workDate,
+            biometric_shift_value: bioVal,
+            entered_shift_value: enteredVal,
+            overridden_by: 'Accountant',
+            reason: 'Manual verification override'
+          })
+        });
+        const data = await res.json();
+        if (res.ok) {
+          showToast('Override audit row recorded!', 'success');
+          loadMismatches();
+        } else {
+          showToast('Error: ' + data.detail, 'error');
+        }
+      } catch (err) {
+        showToast('Override error: ' + err.message, 'error');
+      }
+    }
+
+    async function overrideAllMismatches() {
+      const weekId = getWeekId();
+      try {
+        const res = await fetch(`/weeks/${weekId}/attendance-mismatches/override-all`, {
+          method: 'POST',
+          headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify({
+            overridden_by: 'Accountant',
+            reason: 'Bulk verification override'
+          })
+        });
+        const data = await res.json();
+        if (res.ok) {
+          showToast(data.message, 'success');
+          loadMismatches();
+        } else {
+          showToast('Error: ' + data.detail, 'error');
+        }
+      } catch (err) {
+        showToast('Bulk override error: ' + err.message, 'error');
+      }
+    }
+
+    let popupQueue = [];
+    let biometricPending = false;
+
+    function showPopup(cat) {
+      document.getElementById('tab-' + cat).classList.add('visible');
+    }
+
+    function hidePopup(cat) {
+      document.getElementById('tab-' + cat).classList.remove('visible');
+    }
+
+    function advancePopupQueue() {
+      if (popupQueue.length > 0) {
+        const cat = popupQueue.shift();
+        showPopup(cat);
+        return;
+      }
+      if (biometricPending) {
+        biometricPending = false;
+        loadMismatches();
+        showPopup('biometric');
+        return;
+      }
+      generateClosing();
+    }
+
+    function skipPopup(cat) {
+      hidePopup(cat);
+      advancePopupQueue();
+    }
+
+    function continueFromBiometric() {
+      hidePopup('biometric');
+      advancePopupQueue();
+    }
+
+    async function startWeeklyClosingFlow() {
+      const weekId = getWeekId();
+      try {
+        const res = await fetch(`/weeks/${weekId}/closing-readiness`);
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.detail || 'Failed to check readiness');
+
+        popupQueue = data.pending_categories.slice();
+        biometricPending = data.biometric_mismatch_count > 0;
+
+        if (popupQueue.length === 0 && !biometricPending) {
+          showToast('All data already collected for this week.', 'info');
+        }
+
+        advancePopupQueue();
+      } catch (err) {
+        showToast('Readiness check error: ' + err.message, 'error');
+      }
+    }
+
+    async function generateClosing() {
+      const weekId = getWeekId();
+      try {
+        const res = await fetch(`/weeks/${weekId}/generate-closing`, {
+          method: 'POST'
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.detail || 'Failed to generate closing');
+
+        document.getElementById('res-employees').innerText = data.employees_count;
+        document.getElementById('res-salary').innerText = '₹' + data.total_salary.toFixed(2);
+        document.getElementById('res-contractor').innerText = '₹' + data.total_contractor_commission.toFixed(2);
+        document.getElementById('res-expenses').innerText = '₹' + data.total_factory_expense.toFixed(2);
+        document.getElementById('res-grand').innerText = '₹' + data.grand_total.toFixed(2);
+        
+        const link = document.getElementById('res-download-link');
+        link.href = '/exports/' + data.file_path.split(/[\\/]/).pop();
+        
+        document.getElementById('closing-results').style.display = 'block';
+        showToast('Weekly Closing generated successfully!', 'success');
+      } catch (err) {
+        showToast('Generation error: ' + err.message, 'error');
+      }
+    }
+  </script>
+</body>
+</html>
