@@ -26,6 +26,8 @@ from api.routers import (
     deductions,
     bonuses,
     biometric,
+    reports,
+    dashboard,
 )
 
 BASE_DIR = Path(__file__).resolve().parent
@@ -55,6 +57,8 @@ app.include_router(expenses.router)
 app.include_router(deductions.router)
 app.include_router(bonuses.router)
 app.include_router(biometric.router)
+app.include_router(reports.router)
+app.include_router(dashboard.router)
 
 if STATIC_DIR.exists():
     app.mount("/static", StaticFiles(directory=str(STATIC_DIR)), name="static")

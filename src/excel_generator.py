@@ -143,7 +143,8 @@ def create_workbook() -> Workbook:
 
     default_sheet = workbook.active
 
-    workbook.remove(default_sheet)
+    if default_sheet is not None:
+        workbook.remove(default_sheet)
 
     return workbook
 

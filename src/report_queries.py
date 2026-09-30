@@ -174,101 +174,6 @@ def get_contractor_id(
 
 
 # ==========================================================
-# REPORT FUNCTIONS
-# ==========================================================
-
-def power_table_helpers(
-    connection: sqlite3.Connection,
-    week_id: int,
-):
-    raise NotImplementedError
-
-
-def company_helpers(
-    connection: sqlite3.Connection,
-    week_id: int,
-):
-    raise NotImplementedError
-
-
-def power_pc_rate(
-    connection: sqlite3.Connection,
-    week_id: int,
-):
-    raise NotImplementedError
-
-
-def singer_pc_rate(
-    connection: sqlite3.Connection,
-    week_id: int,
-):
-    raise NotImplementedError
-
-
-def checking_shift(
-    connection: sqlite3.Connection,
-    week_id: int,
-):
-    raise NotImplementedError
-
-
-def checking_pc_rate(
-    connection: sqlite3.Connection,
-    week_id: int,
-):
-    raise NotImplementedError
-
-
-def ironing_pc_rate(
-    connection: sqlite3.Connection,
-    week_id: int,
-):
-    raise NotImplementedError
-
-
-def salary(
-    connection: sqlite3.Connection,
-    week_id: int,
-):
-    raise NotImplementedError
-
-
-def bank_transfer(
-    connection: sqlite3.Connection,
-    week_id: int,
-):
-    raise NotImplementedError
-
-
-def pt_shift(
-    connection: sqlite3.Connection,
-    week_id: int,
-):
-    raise NotImplementedError
-
-
-def expenses(
-    connection: sqlite3.Connection,
-    week_id: int,
-):
-    raise NotImplementedError
-
-
-def outsource(
-    connection: sqlite3.Connection,
-    week_id: int,
-):
-    raise NotImplementedError
-
-
-def security(
-    connection: sqlite3.Connection,
-    week_id: int,
-):
-    raise NotImplementedError
-
-
-# ==========================================================
 # GENERIC REPORT BUILDERS
 # ==========================================================
 
@@ -594,77 +499,33 @@ def get_all_transaction_details(
     transactions = []
 
     # ------------------------------------------------------
-    # 1. EMPLOYEE SALARIES
+    # 1. EMPLOYEE SALARIES (Calculated via Salary Engine)
     # ------------------------------------------------------
 
-    employee_salary = fetch_all(
-        connection,
-        """
-        SELECT
-            e.name AS name,
-            d.name AS department,
-            SUM(pr.total_amount) AS amount
+    salary_result = calculate_weekly_salary(week_id)
+    if salary_result and salary_result.get("employees"):
+        dept_rows = fetch_all(
+            connection,
+            """
+            SELECT e.id, d.name AS department
+            FROM employees e
+            LEFT JOIN departments d
+                ON e.department_id = d.id
+            """
+        )
+        emp_dept_map = {r["id"]: (r["department"] or "GENERAL") for r in dept_rows}
 
-        FROM production_records pr
-
-        JOIN employees e
-            ON pr.employee_id = e.id
-
-        JOIN departments d
-            ON e.department_id = d.id
-
-        WHERE
-            pr.week_id = ?
-            AND e.pay_type = 'PIECE'
-
-        GROUP BY
-            e.id,
-            e.name,
-            d.name
-
-        ORDER BY
-            e.name
-        """,
-        (week_id,),
-    )
-
-    transactions.extend(employee_salary)
-
-    # ------------------------------------------------------
-    # 2. SHIFT EMPLOYEE SALARIES
-    # ------------------------------------------------------
-
-    shift_salary = fetch_all(
-        connection,
-        """
-        SELECT
-            e.name AS name,
-            d.name AS department,
-            SUM(sr.daily_salary) AS amount
-
-        FROM shift_records sr
-
-        JOIN employees e
-            ON sr.employee_id = e.id
-
-        JOIN departments d
-            ON e.department_id = d.id
-
-        WHERE
-            sr.week_id = ?
-
-        GROUP BY
-            e.id,
-            e.name,
-            d.name
-
-        ORDER BY
-            e.name
-        """,
-        (week_id,),
-    )
-
-    transactions.extend(shift_salary)
+        for emp_id, emp in sorted(
+            salary_result["employees"].items(),
+            key=lambda x: x[1]["employee_name"],
+        ):
+            net_sal = float(emp.get("net_salary", 0.0))
+            if net_sal > 0:
+                transactions.append({
+                    "name": emp["employee_name"],
+                    "department": emp_dept_map.get(emp_id, "GENERAL"),
+                    "amount": net_sal,
+                })
 
     # ------------------------------------------------------
     # 3. CONTRACTOR COMMISSIONS
@@ -978,6 +839,32 @@ def helpers_company(
         connection,
         week_id=week_id,
         company_only=True,
+    )
+
+
+def power_table_helpers(
+    connection: sqlite3.Connection,
+    week_id: int,
+):
+    """
+    Power Table Helpers (Contractor + Company).
+    """
+    return get_helper_shift_workers(
+        connection,
+        week_id=week_id,
+    )
+
+
+def company_helpers(
+    connection: sqlite3.Connection,
+    week_id: int,
+):
+    """
+    Company Helpers.
+    """
+    return helpers_company(
+        connection,
+        week_id=week_id,
     )
 
 
@@ -1540,17 +1427,53 @@ def pt_shift(
 def summary(
     connection: sqlite3.Connection,
     week_id: int,
-):
+) -> list[dict[str, Any]]:
 
     """
     Weekly Summary.
 
-    Implemented after salary engine.
+    Uses salary engine to summarize:
+    - Employee Salaries
+    - Contractor Commissions
+    - Factory Expenses
+    - Outsource Payments
+    - Security Payments
+    - Grand Total
     """
 
-    raise NotImplementedError(
-        "Summary engine not implemented yet."
+    salary_result = calculate_weekly_salary(week_id)
+    if salary_result is None:
+        return []
+
+    total_sal = float(salary_result.get("total_salary", 0.0))
+    total_comm = float(salary_result.get("total_contractor_commission", 0.0))
+    total_exp = float(salary_result.get("total_factory_expense", 0.0))
+
+    cursor = connection.cursor()
+    cursor.execute(
+        "SELECT COALESCE(SUM(amount), 0.0) FROM outsource_payments WHERE week_id = ?",
+        (week_id,),
     )
+    outsource_row = cursor.fetchone()
+    total_outsource = float(outsource_row[0] if outsource_row else 0.0)
+
+    cursor.execute(
+        "SELECT COALESCE(SUM(amount), 0.0) FROM security_payments WHERE week_id = ?",
+        (week_id,),
+    )
+    security_row = cursor.fetchone()
+    total_security = float(security_row[0] if security_row else 0.0)
+
+    grand_total = total_sal + total_comm + total_exp + total_outsource + total_security
+
+    return [
+        {"item": "Employee Salaries", "amount": total_sal},
+        {"item": "Contractor Commissions", "amount": total_comm},
+        {"item": "Factory Expenses", "amount": total_exp},
+        {"item": "Outsource Payments", "amount": total_outsource},
+        {"item": "Security Payments", "amount": total_security},
+        {"item": "Grand Total", "amount": grand_total},
+    ]
 
 
 # ==========================================================
