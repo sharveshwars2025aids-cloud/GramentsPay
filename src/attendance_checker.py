@@ -1,4 +1,5 @@
 import sqlite3
+import warnings
 
 
 def check_attendance_vs_shift(
@@ -7,6 +8,7 @@ def check_attendance_vs_shift(
 ):
     """
     Compares biometric attendance with shift records.
+    Updated to use active biometric_attendance and attendance_overrides tables.
 
     Attendance is ONLY used for verification.
     It does NOT change salary calculations.
@@ -14,75 +16,76 @@ def check_attendance_vs_shift(
     Returns employees where the recorded shift
     and attendance-based presence do not match.
     """
-
     cursor = connection.cursor()
 
+    # Query shift records joined with employees
     cursor.execute(
         """
         SELECT
+            e.id,
             e.employee_code,
             e.name,
             sr.work_date,
-            sr.shifts,
-            a.status,
-            a.source
-
+            SUM(sr.shifts) AS total_shifts
         FROM shift_records sr
-
         JOIN employees e
             ON sr.employee_id = e.id
-
-        LEFT JOIN attendance_records a
-            ON a.employee_id = sr.employee_id
-            AND a.work_date = sr.work_date
-
         WHERE sr.week_id = ?
-
+        GROUP BY e.id, e.employee_code, e.name, sr.work_date
         ORDER BY
             sr.work_date,
             e.name
         """,
         (week_id,),
     )
-
     rows = cursor.fetchall()
 
     mismatches = []
 
     for row in rows:
+        emp_id, employee_code, employee_name, work_date, recorded_shifts = row
 
-        (
-            employee_code,
-            employee_name,
-            work_date,
-            recorded_shifts,
-            attendance_status,
-            attendance_source,
-        ) = row
+        # Check if already overridden
+        cursor.execute(
+            """
+            SELECT id FROM attendance_overrides
+            WHERE week_id = ? AND employee_id = ? AND work_date = ?
+            """,
+            (week_id, emp_id, work_date),
+        )
+        if cursor.fetchone():
+            continue
 
-        # No attendance record
-        if attendance_status is None:
+        # Check biometric attendance record
+        cursor.execute(
+            """
+            SELECT SUM(computed_shift_value)
+            FROM biometric_attendance
+            WHERE week_id = ? AND employee_id = ? AND work_date = ?
+            """,
+            (week_id, emp_id, work_date),
+        )
+        bio_row = cursor.fetchone()
+        biometric_shift = bio_row[0] if (bio_row and bio_row[0] is not None) else None
 
+        if biometric_shift is None:
             mismatches.append({
                 "employee_code": employee_code,
                 "employee_name": employee_name,
-                "work_date": work_date,
-                "recorded_shifts": recorded_shifts,
+                "work_date": str(work_date),
+                "recorded_shifts": float(recorded_shifts or 0.0),
                 "attendance_status": "NO RECORD",
-                "attendance_source": None,
+                "attendance_source": "BIOMETRIC",
                 "reason": "No attendance record found",
             })
-
-        # Employee marked absent but shift was recorded
-        elif attendance_status.upper() == "ABSENT" and recorded_shifts > 0:
-
+        elif biometric_shift == 0.0 and recorded_shifts > 0:
             mismatches.append({
                 "employee_code": employee_code,
                 "employee_name": employee_name,
-                "work_date": work_date,
-                "recorded_shifts": recorded_shifts,
-                "attendance_status": attendance_status,
-                "attendance_source": attendance_source,
+                "work_date": str(work_date),
+                "recorded_shifts": float(recorded_shifts or 0.0),
+                "attendance_status": "ABSENT",
+                "attendance_source": "BIOMETRIC",
                 "reason": "Shift recorded but attendance marked absent",
             })
 

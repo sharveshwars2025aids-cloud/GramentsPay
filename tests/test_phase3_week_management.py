@@ -68,36 +68,44 @@ def test_04_invalid_week_id_returns_404():
 
 def test_05_update_existing_week():
     # Test E: Update existing week
-    import time
-    ts = int(time.time()) % 100000
-    w_start = f"2099-01-01"
-    w_end_init = f"2099-01-07"
-    w_end_updated = f"2099-01-08"
+    w_start = "2098-11-01"
+    w_end_init = "2098-11-07"
+    w_end_updated = "2098-11-08"
 
-    # Ensure clean state for test dates
+    # Ensure clean state for this specific test week
     conn = database.connect_database()
     cursor = conn.cursor()
-    cursor.execute("DELETE FROM weeks WHERE week_start LIKE '2099-%'")
+    cursor.execute("DELETE FROM weeks WHERE week_start = ?", (w_start,))
     conn.commit()
     conn.close()
 
-    payload = {
-        "week_start": w_start,
-        "week_end": w_end_init
-    }
-    created = client.post("/weeks", json=payload).json()
-    week_id = created["id"]
+    try:
+        payload = {
+            "week_start": w_start,
+            "week_end": w_end_init
+        }
+        res_create = client.post("/weeks", json=payload)
+        assert res_create.status_code == 201
+        created = res_create.json()
+        week_id = created["id"]
 
-    update_payload = {
-        "week_start": w_start,
-        "week_end": w_end_updated,
-        "closing_generated": 0
-    }
-    update_res = client.put(f"/weeks/{week_id}", json=update_payload)
-    assert update_res.status_code == 200
-    data = update_res.json()
-    assert data["id"] == week_id
-    assert data["week_end"] == w_end_updated
+        update_payload = {
+            "week_start": w_start,
+            "week_end": w_end_updated,
+            "closing_generated": 0
+        }
+        update_res = client.put(f"/weeks/{week_id}", json=update_payload)
+        assert update_res.status_code == 200
+        data = update_res.json()
+        assert data["id"] == week_id
+        assert data["week_end"] == w_end_updated
+    finally:
+        # Clean up only the test week created
+        conn = database.connect_database()
+        cursor = conn.cursor()
+        cursor.execute("DELETE FROM weeks WHERE week_start = ?", (w_start,))
+        conn.commit()
+        conn.close()
 
 
 
